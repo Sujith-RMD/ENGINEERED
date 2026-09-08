@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// One playthrough. The session id + rng seed allow the server to
+// deterministically re-simulate the run when the result is submitted.
+model Session {
+  id           String    @id @default(cuid())
+  missionId    String
+  difficulty   String    @default("normal")
+  rngSeed      Int
+  status       String    @default("active") // active | finished | abandoned
+  createdAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  decisions    Decision[]
+  result       Result?
+
+  @@index([status, createdAt])
+}
+
+// Every engineering decision, with enough state to replay/debug the run.
+model Decision {
+  id             String   @id @default(cuid())
+  sessionId      String
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  seq            Int
+  tSeconds       Int // mission clock (seconds elapsed) when taken
+  actionId       String
+  eventId        String? // set when this action was an event response
+  stateBefore    Json
+  stateAfter     Json
+  cost           Json
+  consequence    String? // human-readable one-liner
+  createdAt      DateTime @default(now())
+
+  @@index([sessionId, seq])
+}
+
+// Final scored outcome of a session. Never trust client scores:
+// the server re-simulates the session before writing a Result.
+model Result {
+  id           String            @id @default(cuid())
+  sessionId    String            @unique
+  session      Session           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  missionId    String
+  difficulty   String
+  playerName   String?
+  score        Int
+  archetypeId  String
+  metrics      Json // skill category scores
+  finalState   Json
+  projection   Json // 10-year projection summary
+  summary      Json // achievement / mistake / insights
+  shareId      String            @unique // short id for QR / share URLs
+  createdAt    DateTime          @default(now())
+  leaderboard  LeaderboardEntry?
+
+  @@index([missionId, score])
+}
+
+// Leaderboard rows. `day` is a UTC calendar date string for daily boards.
+model LeaderboardEntry {
+  id         String   @id @default(cuid())
+  resultId   String   @unique
+  result     Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  missionId  String
+  difficulty String
+  playerName String?
+  score      Int
+  day        String
+  hidden     Boolean  @default(false) // admin can hide entries
+  createdAt  DateTime @default(now())
+
+  @@index([day, score])
+  @@index([missionId, score])
+}
+
+// Simple key/value store for admin toggles (enabled missions, etc).
+model AdminSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

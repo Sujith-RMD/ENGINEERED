@@ -1,0 +1,46 @@
+{
+  "name": "engineered",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ENGINEERED — 150 Seconds. One System. Infinite Consequences. A consequence-driven engineering simulation for Engineers' Day.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "prisma generate && next build --experimental-build-mode=compile",
+    "start": "next start -p 3000",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "stall": "node scripts/stall-server.mjs",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.42.0",
+    "motion": "^13.2.0",
+    "next": "^15.5.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "^24.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^4.3.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.0"
+  }
+}
